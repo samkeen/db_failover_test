@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 ##############################################
-# This script will start executing a 'heartbeat' query to the given MySQL
-# database, once every second.
-# Use:
-# 1. execute this script
-# 2. reboot your fail over configured db.
-# 3. This script will continue to run, it will detect the db connection failures and then
-#    the return as the former secondary Db node take over.
+# This script will start executing a 'heartbeat' query to the given MySQL database, roughly once every second.
+# When there is a connection disruption, it will continue to try connections every sec.
+# When connectivity returns, it will stop and report the total time the db was not accessible.
+# This can be used measure the amount of time required for Failover in Db clusters with such capability
+
+# Workflow:
+#  1. execute this script
+#  2. Take the action on you Db to initiate fail over workflow.
 #
 import argparse
 import logging
