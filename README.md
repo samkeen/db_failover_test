@@ -50,4 +50,24 @@ $ git clone https://github.com/samkeen/db_test_meter.git
 
 $ cd db_test_meter
 ```
-Now simply follow ***Setup*** instructions above 
+Now simply follow ***Setup*** instructions above
+
+## failover_sync.py
+
+This script simply inserts *hearbeat* records into a database until the connection fails.
+
+<<<<TODO>>>>>
+It then continues to check the connection until it comes back (db failover finishes)
+At that point it checks that the last record inserted to the previous primary exists in this new primary.
+
+### Usage
+
+```
+# run create_failover_sync_db.py if needed (see notes below)
+./failover_sync.py --test_run_id=bob2
+```
+`test_run_id` is a unique identifier use to segregate differing test runs in the  `db_sync` db table
+
+### Notes
+`create_failover_sync_db.py` is run to create the db and table to support `failover_sync.py`.
+Each time this is run it drops the DB and recreates.

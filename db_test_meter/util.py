@@ -36,8 +36,8 @@ def ensure_loop_time(loop_time_min_in_sec: float, loop_start_time: float, prev_l
         log.debug(f'prev loop start end time: {prev_loop_end_time}')
         last_loop_runtime = loop_start_time - prev_loop_end_time
         log.debug(f'last loop runtime: {last_loop_runtime}')
-        if last_loop_runtime < 1:
-            sleep_time = 1 - last_loop_runtime
+        if last_loop_runtime < loop_time_min_in_sec:
+            sleep_time = loop_time_min_in_sec - last_loop_runtime
             log.debug(f'sleeping {sleep_time}')
             time.sleep(sleep_time)
 
@@ -108,6 +108,56 @@ def test_db_connection(db_connection_metadata) -> bool:
         else:
             log.fatal('Maximum Db connection failures of 600 occurred, exiting...')
             exit(1)
+    finally:
+        if connection and connection.open:
+            connection.close()
+
+
+def insert_heartbeat(db_connection_metadata: dict, test_run_id: str, index_id: int) -> bool:
+    connection = None
+    try:
+        log.debug('building connection')
+        connection = get_db_connection(db_connection_metadata)
+        log.debug('building cursor')
+        cursor = connection.cursor()
+        sql = "INSERT INTO db_sync SET test_run_id=%s, index_id=%s, created=now()"
+        log.debug('executing query')
+        cursor.execute('USE `db_test_meter`')
+        cursor.execute(sql, (test_run_id, index_id,))
+        cursor.connection.commit()
+        print(f'Insert succeeded at {time.ctime()} test_run_id: {test_run_id}, index_id:{index_id}')
+        cursor.close()
+        TestRun.prev_loop_end_time = time.time()
+        TestRun.success_connect_count += 1
+        return True
+    except Exception as e:
+        print(f'There was an error: {e}')
+        TestRun.failed_connect_count += 1
+        return False
+    finally:
+        if connection and connection.open:
+            connection.close()
+
+
+def create_db(db_connection_metadata: dict) -> bool:
+    connection = None
+    try:
+        log.debug('building connection')
+        connection = get_db_connection(db_connection_metadata)
+        log.debug('building cursor')
+        cursor = connection.cursor()
+        log.debug('creating database db_test_meter')
+        cursor.execute("DROP DATABASE IF EXISTS db_test_meter")
+        cursor.execute("CREATE DATABASE IF NOT EXISTS db_test_meter")
+        cursor.execute("USE db_test_meter")
+        log.debug('creating table db_test_meter')
+        cursor.execute(
+            "CREATE TABLE db_sync (`test_run_id` varchar(50) NOT NULL, `index_id` int(10) unsigned NOT NULL, `created` datetime NOT NULL)")
+        cursor.close()
+        print('Database db_test_meter created')
+        print('Table db_test_meter.db_sync created')
+    except Exception as e:
+        print(f'There was an error: {e}')
     finally:
         if connection and connection.open:
             connection.close()
