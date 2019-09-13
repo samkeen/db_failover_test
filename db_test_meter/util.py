@@ -64,7 +64,7 @@ def get_db_connection(db_connection_metadata: dict) -> pymysql.Connection:
 
 
 def collect_user_input() -> dict:
-    db_connection_metadata = {}
+    db_connection_metadata = {'ssl_metadata': None}
     db_connection_metadata['db_interact_timeout'] = 1  # 1 sec
     db_connection_metadata['db_host'] = input("RDS Endpoint: [localhost]") or 'localhost'
     db_connection_metadata['db_port'] = input("Db port [3306]: ") or '3306'
