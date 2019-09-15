@@ -6,7 +6,7 @@ import time
 
 from db_test_meter.database import Database
 from db_test_meter.test_run import TestRun
-from db_test_meter.util import ensure_loop_time, init_logger, collect_user_input
+from db_test_meter.util import init_logger, collect_user_input
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--test_run_id', metavar='<test run id>', type=str, nargs=1, required=True,
@@ -25,11 +25,14 @@ if not test_runner.test_db_connection():
     log.fatal('Initial db connection failed.  Check you connection setup and try again. Exiting...')
     exit(1)
 
+pre_failure_db_node_hostname = test_runner.get_db_node_hostname()
+print(f'Test starting, initial Db node hostname: {pre_failure_db_node_hostname}')
+post_failure_db_node_hostname = None
+
 loop_index = 1
 while True:
     loop_start_time = time.time()
-    # ensure minimum pause of 1 sec between loop iterations
-    ensure_loop_time(.5, loop_start_time, test_runner.prev_loop_end_time)
+    test_runner.ensure_minumum_loop_time(.5, loop_start_time, test_runner.prev_loop_end_time)
     if test_runner.insert_heartbeat(test_run_id, loop_index):
         loop_index += 1
         continue

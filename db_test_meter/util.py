@@ -2,7 +2,7 @@ import getpass
 import logging
 import os
 import sys
-import time
+
 from db_test_meter.database import Database
 
 log = logging.getLogger()
@@ -19,7 +19,7 @@ def init_logger(debug=False) -> None:
 def collect_user_input() -> dict:
     user_input = {'ssl_metadata': None}
     user_input['db_interact_timeout'] = 1  # 1 sec
-    user_input['db_host'] = input("RDS Endpoint: [localhost]") or 'localhost'
+    user_input['db_host'] = input("RDS Endpoint [localhost]: ") or 'localhost'
     user_input['db_port'] = input("Db port [3306]: ") or '3306'
     user_input['db_user'] = input("Db User [root]: ") or 'root'
     user_input['db_password'] = getpass.getpass('Password for Db user: ')
@@ -32,26 +32,6 @@ def collect_user_input() -> dict:
             exit(1)
         user_input['ssl_metadata'] = {'ssl': {'ca': path_to_ssl_cert}}
     return user_input
-
-
-def ensure_loop_time(loop_time_min_in_sec: float, loop_start_time: float, prev_loop_end_time: float):
-    """
-    Used to ensure a minimum runtime for a given loop iteration.
-
-    :param prev_loop_end_time:
-    :param loop_start_time:
-    :param loop_time_min_in_sec: The minimum runtime allowed for a loop.  We will sleep any time needed to meet this
-    minimum
-    """
-    if prev_loop_end_time is not None:
-        log.debug(f'this loop start time: {loop_start_time}')
-        log.debug(f'prev loop start end time: {prev_loop_end_time}')
-        last_loop_runtime = loop_start_time - prev_loop_end_time
-        log.debug(f'last loop runtime: {last_loop_runtime}')
-        if last_loop_runtime < loop_time_min_in_sec:
-            sleep_time = loop_time_min_in_sec - last_loop_runtime
-            log.debug(f'sleeping {sleep_time}')
-            time.sleep(sleep_time)
 
 
 def create_db(db: Database) -> bool:

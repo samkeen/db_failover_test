@@ -19,10 +19,8 @@ class TestRun:
         try:
             log.debug('building connection')
             log.debug('building cursor')
-            # sql = "SHOW variables LIKE 'hostname'"
             log.debug('executing query')
-            result = self.db.run_query('SELECT version()')
-            print(f'Result {result}')
+            self.db.run_query('SELECT version()')
             print(f'Connection succeeded at {time.ctime()}')
             self.success_connect_count += 1
             return True
@@ -38,6 +36,16 @@ class TestRun:
             else:
                 log.fatal('Maximum Db connection failures of 600 occurred, exiting...')
                 exit(1)
+
+    def get_db_node_hostname(self):
+        query = "SHOW variables LIKE 'hostname'"
+        result = self.db.run_query(query)
+        if result and 'Value' in result[0]:
+            db_node_hostname = result[0]["Value"]
+            log.debug(f'Db node Hostname: {db_node_hostname}')
+        else:
+            raise Exception(f'Unable to retrieve db node hostname with query: {query}')
+        return db_node_hostname
 
     def insert_heartbeat(self, test_run_id: str, index_id: int) -> bool:
         try:
@@ -62,20 +70,8 @@ class TestRun:
             return True
         return False
 
-    def ensure_loop_time(self, loop_time_min_in_sec: float, loop_start_time: float, prev_loop_end_time: float):
-        """
-        Used to ensure a minimum runtime for a given loop iteration.
+    def ensure_minumum_loop_time(self, loop_time_min_in_sec: float, loop_start_time: float, prev_loop_end_time: float):
 
-        :param loop_time_min_in_sec: The minimum runtime allowed for a loop.  We will sleep any time needed to meet this
-        minimum
-        :type loop_time_min_in_sec: float
-        :param loop_start_time:
-        :type loop_start_time: float
-        :param prev_loop_end_time:
-        :type prev_loop_end_time: float
-        :return:
-        :rtype: None
-        """
         if prev_loop_end_time is not None:
             log.debug(f'this loop start time: {loop_start_time}')
             log.debug(f'prev loop start end time: {prev_loop_end_time}')

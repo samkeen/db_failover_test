@@ -31,13 +31,17 @@ if not test_runner.test_db_connection():
     log.fatal('Initial db connection failed.  Check you connection setup and try again. Exiting...')
     exit(1)
 
+pre_failure_db_node_hostname = test_runner.get_db_node_hostname()
+print(f'Test starting, initial Db node hostname: {pre_failure_db_node_hostname}')
+post_failure_db_node_hostname = None
+
 while True:
     loop_start_time = time.time()
-    # ensure minimum pause of 1 sec between loop iterations
-    test_runner.ensure_loop_time(1, loop_start_time, test_runner.prev_loop_end_time)
+    test_runner.ensure_minumum_loop_time(1, loop_start_time, test_runner.prev_loop_end_time)
     if test_runner.test_db_connection():
         if test_runner.recovery_detected():
             test_runner.failure_condition_end_time = time.time()
+            post_failure_db_node_hostname = test_runner.get_db_node_hostname()
             break
         else:
             # we have either not entered error state or are still in error state
@@ -52,3 +56,5 @@ print(f'failure_start_time: {time.ctime(test_runner.failure_condition_start_time
 print(f'failure_end_time: {time.ctime(test_runner.failure_condition_end_time)}')
 duration = int(test_runner.failure_condition_end_time - test_runner.failure_condition_start_time)
 print(f'failure condition duration: {duration} seconds')
+print(f'Pre-failure Db node hostname: {pre_failure_db_node_hostname}')
+print(f'Post-failure Db node hostname: {post_failure_db_node_hostname}')
