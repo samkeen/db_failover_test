@@ -24,6 +24,7 @@ class Database:
     def open_connection(self, db=None):
 
         if self.conn is None:
+            logging.debug('opening db connection')
             self.conn = pymysql.connect(
                 host=self.host,
                 port=self.port,
@@ -37,25 +38,28 @@ class Database:
                 ssl=self.ssl_metadata,
                 database=db
             )
-            logging.info('Connection opened successfully.')
+            logging.debug('Connection opened successfully.')
 
     def run_query(self, query, query_params=None, db=None):
-        """Execute SQL query."""
         try:
             self.open_connection(db)
             with self.conn.cursor() as cur:
                 if 'SELECT' in query or 'SHOW' in query:
                     records = []
-                    cur.execute(query)
+                    logging.debug(f'executing query: {query}  params:{query_params}')
+                    cur.execute(query, query_params)
                     result = cur.fetchall()
                     for row in result:
                         records.append(row)
+                    logging.debug('closing db connection')
                     cur.close()
                     return records
                 else:
-                    result = cur.execute(query, query_params)
+                    logging.debug(f'executing query: {query}  params:{query_params}')
+                    cur.execute(query, query_params)
                     self.conn.commit()
                     affected = f"{cur.rowcount} rows affected."
+                    logging.debug('closing db connection')
                     cur.close()
                     return affected
         except pymysql.MySQLError as e:

@@ -25,9 +25,8 @@ def collect_user_input() -> dict:
     user_input['db_password'] = getpass.getpass('Password for Db user: ')
     using_ssl = input('Connecting over SSL (y/n) [y]: ').strip().lower() or 'y'
     if using_ssl == 'y':
-        path_to_ssl_cert = os.path.abspath(
-            input('path to ssl cert [./rds-combined-ca-bundle.pem]: ')) or './rds-combined-ca-bundle.pem'
-        if not os.path.exists(path_to_ssl_cert):
+        path_to_ssl_cert = input('path to ssl cert [./rds-combined-ca-bundle.pem]: ') or './rds-combined-ca-bundle.pem'
+        if not os.path.exists(os.path.abspath(path_to_ssl_cert)):
             log.fatal(f'SSL cert not found at: {path_to_ssl_cert}')
             exit(1)
         user_input['ssl_metadata'] = {'ssl': {'ca': path_to_ssl_cert}}
@@ -46,7 +45,7 @@ def create_db(db: Database) -> bool:
         db.run_query("CREATE DATABASE IF NOT EXISTS db_test_meter")
         log.debug('creating table db_test_meter')
         db.run_query(
-            "CREATE TABLE db_sync (`test_run_id` varchar(50) NOT NULL, `index_id` int(10) unsigned NOT NULL, `created` datetime NOT NULL)",
+            "CREATE TABLE db_sync (`test_run_id` varchar(50) NOT NULL, `index_id` int(10) unsigned NOT NULL, `created` int(8) NOT NULL)",
             db='db_test_meter')
         print('Database db_test_meter created')
         print('Table db_test_meter.db_sync created')

@@ -42,12 +42,9 @@ while True:
         if test_runner.recovery_detected():
             test_runner.failure_condition_end_time = time.time()
             post_failure_db_node_hostname = test_runner.get_db_node_hostname()
-            break
-        else:
-            # we have either not entered error state or are still in error state
             test_runner.prev_loop_end_time = time.time()
-    else:
-        continue
+            break
+    test_runner.prev_loop_end_time = time.time()
 
 print(f'Total Db connection attempts: {test_runner.success_connect_count + test_runner.failed_connect_count}')
 print(f'Successful Db connections: {test_runner.success_connect_count}')

@@ -14,12 +14,11 @@ class TestRun:
         self.prev_loop_end_time: float = 0
         self.failure_condition_start_time: float = 0
         self.failure_condition_end_time: float = 0
+        self.heartbeat_index = 0
+        self.last_inserted_heartbeat_index = 0
 
     def test_db_connection(self) -> bool:
         try:
-            log.debug('building connection')
-            log.debug('building cursor')
-            log.debug('executing query')
             self.db.run_query('SELECT version()')
             print(f'Connection succeeded at {time.ctime()}')
             self.success_connect_count += 1
@@ -31,7 +30,6 @@ class TestRun:
             self.current_phase = 'FAILING'
             self.failed_connect_count += 1
             if self.failed_connect_count <= 600:  # limit error start to ~ 10 minutes
-                self.prev_loop_end_time = time.time()
                 return False
             else:
                 log.fatal('Maximum Db connection failures of 600 occurred, exiting...')
@@ -47,20 +45,30 @@ class TestRun:
             raise Exception(f'Unable to retrieve db node hostname with query: {query}')
         return db_node_hostname
 
-    def insert_heartbeat(self, test_run_id: str, index_id: int) -> bool:
+    def db_node_heartbeat(self, test_run_id: str) -> bool:
         try:
-            log.debug('executing query')
-            self.db.run_query("INSERT INTO db_sync SET test_run_id=%s, index_id=%s, created=now()",
-                              (test_run_id, index_id,),
-                              db='db_test_meter')
-            print(f'Insert succeeded at {time.ctime()} test_run_id: {test_run_id}, index_id:{index_id}')
-            self.prev_loop_end_time = time.time()
-            self.success_connect_count += 1
+            if self.current_phase == 'FAILING':
+                return self.test_db_connection()
+            else:
+                self.db.run_query("INSERT INTO db_sync SET test_run_id=%s, index_id=%s, created=UNIX_TIMESTAMP()",
+                                  (test_run_id, self.heartbeat_index,),
+                                  db='db_test_meter')
+                self.last_inserted_heartbeat_index = self.heartbeat_index
+                self.heartbeat_index += 1
+                print(f'Insert succeeded at {time.ctime()} test_run_id: {test_run_id}, index_id:{self.heartbeat_index}')
+                self.success_connect_count += 1
             return True
         except Exception as e:
             print(f'There was an error: {e}')
+            if self.current_phase == 'INIT':
+                self.failure_condition_start_time = time.time()
+            self.current_phase = 'FAILING'
             self.failed_connect_count += 1
-            return False
+            if self.failed_connect_count <= 600:  # limit error start to ~ 10 minutes
+                return False
+            else:
+                log.fatal('Maximum Db connection failures of 600 occurred, exiting...')
+                exit(1)
 
     def recovery_detected(self) -> bool:
         if self.current_phase == 'FAILING':
@@ -81,3 +89,10 @@ class TestRun:
                 sleep_time = loop_time_min_in_sec - last_loop_runtime
                 log.debug(f'sleeping {sleep_time}')
                 time.sleep(sleep_time)
+
+    def get_last_sync_records(self, test_run_id: str, number_of_records: int) -> dict:
+        result = self.db.run_query(
+            'SELECT * FROM `db_sync` WHERE test_run_id = %s ORDER BY `index_id` DESC LIMIT %s',
+            (test_run_id, number_of_records),
+            db='db_test_meter')
+        return result
