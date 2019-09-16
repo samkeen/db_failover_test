@@ -21,7 +21,7 @@ def create_db(db: Database) -> None:
         db.run_query(
             f"CREATE TABLE {AppConfig.TEST_DB_NAME}.{AppConfig.TEST_DB_TABLE} (`test_run_id` varchar(50) NOT NULL, `index_id` int(10) unsigned NOT NULL, `created` int(8) NOT NULL)")
         print(f'Database {AppConfig.TEST_DB_NAME} created')
-        print(f'Table {AppConfig.TEST_DB_TABLE}.{AppConfig.TEST_DB_TABLE} created')
+        print(f'Table {AppConfig.TEST_DB_NAME}.{AppConfig.TEST_DB_TABLE} created')
     except Exception as e:
         print(f'There was an error: {e}')
 

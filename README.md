@@ -123,7 +123,7 @@ Connecting over SSL (y/n) [y]: n
 /Users/samkeen/Projects/db_test_meter/venv/lib/python3.7/site-packages/pymysql/cursors.py:329: Warning: (1008, "Can't drop database 'db_test_meter'; database doesn't exist")
   self._do_get_result()
 Database db_test_meter created
-Table db_sync.db_sync created
+Table db_test_meter.db_sync created
 
 # Then start the test, and initiate the failover event
 $(venv) ./failover_test.py --test_run_id test_run_0
