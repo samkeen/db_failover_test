@@ -50,9 +50,9 @@ class TestRun:
             if self.current_phase == 'FAILING':
                 return self.test_db_connection()
             else:
-                self.db.run_query("INSERT INTO db_sync SET test_run_id=%s, index_id=%s, created=UNIX_TIMESTAMP()",
-                                  (test_run_id, self.heartbeat_index,),
-                                  db='db_test_meter')
+                self.db.run_query(
+                    "INSERT INTO db_test_meter.db_sync SET test_run_id=%s, index_id=%s, created=UNIX_TIMESTAMP()",
+                    (test_run_id, self.heartbeat_index,))
                 self.last_inserted_heartbeat_index = self.heartbeat_index
                 self.heartbeat_index += 1
                 print(f'Insert succeeded at {time.ctime()} test_run_id: {test_run_id}, index_id:{self.heartbeat_index}')
@@ -63,6 +63,8 @@ class TestRun:
             if self.current_phase == 'INIT':
                 self.failure_condition_start_time = time.time()
             self.current_phase = 'FAILING'
+            # we've failed so kill this connection
+            self.db.close_connection()
             self.failed_connect_count += 1
             if self.failed_connect_count <= 600:  # limit error start to ~ 10 minutes
                 return False
@@ -80,7 +82,7 @@ class TestRun:
 
     def ensure_minumum_loop_time(self, loop_time_min_in_sec: float, loop_start_time: float, prev_loop_end_time: float):
 
-        if prev_loop_end_time is not None:
+        if prev_loop_end_time != 0:
             log.debug(f'this loop start time: {loop_start_time}')
             log.debug(f'prev loop start end time: {prev_loop_end_time}')
             last_loop_runtime = loop_start_time - prev_loop_end_time
@@ -92,7 +94,9 @@ class TestRun:
 
     def get_last_sync_records(self, test_run_id: str, number_of_records: int) -> dict:
         result = self.db.run_query(
-            'SELECT * FROM `db_sync` WHERE test_run_id = %s ORDER BY `index_id` DESC LIMIT %s',
-            (test_run_id, number_of_records),
-            db='db_test_meter')
+            'SELECT * FROM db_test_meter.db_sync WHERE test_run_id = %s ORDER BY `index_id` DESC LIMIT %s',
+            (test_run_id, number_of_records))
         return result
+
+    def shutdown(self):
+        self.db.close_connection()

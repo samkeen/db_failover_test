@@ -36,16 +36,22 @@ pre_failure_db_node_hostname = test_runner.get_db_node_hostname()
 print(f'Test starting, initial Db node hostname: {pre_failure_db_node_hostname}')
 post_failure_db_node_hostname = None
 
-while True:
-    loop_start_time = time.time()
-    test_runner.ensure_minumum_loop_time(loop_time, loop_start_time, test_runner.prev_loop_end_time)
-    if test_runner.db_node_heartbeat(test_run_id):
-        if test_runner.recovery_detected():
-            test_runner.failure_condition_end_time = time.time()
-            post_failure_db_node_hostname = test_runner.get_db_node_hostname()
-            test_runner.prev_loop_end_time = time.time()
-            break
-    test_runner.prev_loop_end_time = time.time()
+try:
+    while True:
+        loop_start_time = time.time()
+        test_runner.ensure_minumum_loop_time(loop_time, loop_start_time, test_runner.prev_loop_end_time)
+        if test_runner.db_node_heartbeat(test_run_id):
+            if test_runner.recovery_detected():
+                test_runner.failure_condition_end_time = time.time()
+                post_failure_db_node_hostname = test_runner.get_db_node_hostname()
+                test_runner.prev_loop_end_time = time.time()
+                break
+        test_runner.prev_loop_end_time = time.time()
+except Exception as e:
+    print(f'There was an unexpected exception: {e}')
+finally:
+    test_runner.shutdown()
+
 
 pp = pprint.PrettyPrinter(indent=2)
 print(f'Total Db connection attempts: {test_runner.success_connect_count + test_runner.failed_connect_count}')

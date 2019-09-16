@@ -18,10 +18,9 @@ class Database:
         self.connect_timeout = db_connection_metadata['db_interact_timeout']  # 1 sec
         self.ssl_metadata = db_connection_metadata['ssl_metadata']
 
-        # self.dbname = config.db_name
         self.conn = None
 
-    def open_connection(self, db=None):
+    def open_connection(self):
 
         if self.conn is None:
             logging.debug('opening db connection')
@@ -35,14 +34,14 @@ class Database:
                 read_timeout=self.read_timeout,  # 1 sec
                 write_timeout=self.write_timeout,  # 1 sec
                 connect_timeout=self.connect_timeout,  # 1 sec
-                ssl=self.ssl_metadata,
-                database=db
+                ssl=self.ssl_metadata
             )
             logging.debug('Connection opened successfully.')
 
-    def run_query(self, query, query_params=None, db=None):
+    def run_query(self, query, query_params=None):
         try:
-            self.open_connection(db)
+            cur = None
+            self.open_connection()
             with self.conn.cursor() as cur:
                 if 'SELECT' in query or 'SHOW' in query:
                     records = []
@@ -66,7 +65,11 @@ class Database:
             print(e)
             raise Exception('Db Connection failed')
         finally:
-            if self.conn:
-                self.conn.close()
-                self.conn = None
-                logging.info('Database connection closed.')
+            if cur:
+                cur.close()
+
+    def close_connection(self):
+        if self.conn:
+            self.conn.close()
+            self.conn = None
+            logging.info('Database connection closed.')

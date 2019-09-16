@@ -45,8 +45,7 @@ def create_db(db: Database) -> bool:
         db.run_query("CREATE DATABASE IF NOT EXISTS db_test_meter")
         log.debug('creating table db_test_meter')
         db.run_query(
-            "CREATE TABLE db_sync (`test_run_id` varchar(50) NOT NULL, `index_id` int(10) unsigned NOT NULL, `created` int(8) NOT NULL)",
-            db='db_test_meter')
+            "CREATE TABLE db_test_meter.db_sync (`test_run_id` varchar(50) NOT NULL, `index_id` int(10) unsigned NOT NULL, `created` int(8) NOT NULL)")
         print('Database db_test_meter created')
         print('Table db_test_meter.db_sync created')
     except Exception as e:
