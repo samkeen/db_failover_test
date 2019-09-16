@@ -1,7 +1,7 @@
 import time
 
 from db_test_meter.database import Database
-from db_test_meter.util import log
+from db_test_meter.util import log, AppConfig
 
 
 class TestRun:
@@ -51,7 +51,7 @@ class TestRun:
                 return self.test_db_connection()
             else:
                 self.db.run_query(
-                    "INSERT INTO db_test_meter.db_sync SET test_run_id=%s, index_id=%s, created=UNIX_TIMESTAMP()",
+                    f"INSERT INTO {AppConfig.TEST_DB_NAME}.{AppConfig.TEST_DB_TABLE} SET test_run_id=%s, index_id=%s, created=UNIX_TIMESTAMP()",
                     (test_run_id, self.heartbeat_index,))
                 self.last_inserted_heartbeat_index = self.heartbeat_index
                 self.heartbeat_index += 1
@@ -94,7 +94,7 @@ class TestRun:
 
     def get_last_sync_records(self, test_run_id: str, number_of_records: int) -> dict:
         result = self.db.run_query(
-            'SELECT * FROM db_test_meter.db_sync WHERE test_run_id = %s ORDER BY `index_id` DESC LIMIT %s',
+            f'SELECT * FROM {AppConfig.TEST_DB_NAME}.{AppConfig.TEST_DB_TABLE} WHERE test_run_id = %s ORDER BY `index_id` DESC LIMIT %s',
             (test_run_id, number_of_records))
         return result
 

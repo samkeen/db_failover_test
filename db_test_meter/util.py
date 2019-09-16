@@ -3,9 +3,12 @@ import logging
 import os
 import sys
 
-from db_test_meter.database import Database
-
 log = logging.getLogger()
+
+
+class AppConfig:
+    TEST_DB_NAME = 'db_test_meter'
+    TEST_DB_TABLE = 'db_sync'
 
 
 def init_logger(debug=False) -> None:
@@ -31,22 +34,3 @@ def collect_user_input() -> dict:
             exit(1)
         user_input['ssl_metadata'] = {'ssl': {'ca': path_to_ssl_cert}}
     return user_input
-
-
-def create_db(db: Database) -> bool:
-    """
-    Utility to create the db and table for the sync check
-    :param db:
-    :return:
-    """
-    try:
-        log.debug('creating database db_test_meter')
-        db.run_query("DROP DATABASE IF EXISTS db_test_meter")
-        db.run_query("CREATE DATABASE IF NOT EXISTS db_test_meter")
-        log.debug('creating table db_test_meter')
-        db.run_query(
-            "CREATE TABLE db_test_meter.db_sync (`test_run_id` varchar(50) NOT NULL, `index_id` int(10) unsigned NOT NULL, `created` int(8) NOT NULL)")
-        print('Database db_test_meter created')
-        print('Table db_test_meter.db_sync created')
-    except Exception as e:
-        print(f'There was an error: {e}')

@@ -3,13 +3,15 @@
 import argparse
 import logging
 import pprint
+import sys
 import time
+import traceback
 
 from db_test_meter.database import Database
 from db_test_meter.test_run import TestRun
 from db_test_meter.util import init_logger, collect_user_input
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser('This will gather metrics of a failover event')
 parser.add_argument('--test_run_id', metavar='<test run id>', type=str, nargs='?', required=True,
                     help='a unique identifier for this test run')
 parser.add_argument('--loop_time', metavar='<seconds>', type=float, nargs='?', default='.5',
@@ -49,6 +51,10 @@ try:
         test_runner.prev_loop_end_time = time.time()
 except Exception as e:
     print(f'There was an unexpected exception: {e}')
+    print("-" * 60)
+    traceback.print_exc(file=sys.stdout)
+    print("-" * 60)
+    exit(1)
 finally:
     test_runner.shutdown()
 
