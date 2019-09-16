@@ -60,6 +60,7 @@ finally:
 
 
 pp = pprint.PrettyPrinter(indent=2)
+print('\n========================================')
 print(f'Total Db connection attempts: {test_runner.success_connect_count + test_runner.failed_connect_count}')
 print(f'Successful Db connections: {test_runner.success_connect_count}')
 print(f'Failed Db connections: {test_runner.failed_connect_count}')

@@ -22,7 +22,7 @@ def init_logger(debug=False) -> None:
 def collect_user_input() -> dict:
     user_input = {'ssl_metadata': None}
     user_input['db_interact_timeout'] = 1  # 1 sec
-    user_input['db_host'] = input("RDS Endpoint [localhost]: ") or 'localhost'
+    user_input['db_host'] = input("Db Endpoint [localhost]: ") or 'localhost'
     user_input['db_port'] = input("Db port [3306]: ") or '3306'
     user_input['db_user'] = input("Db User [root]: ") or 'root'
     user_input['db_password'] = getpass.getpass('Password for Db user: ')
